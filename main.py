@@ -10,11 +10,9 @@ import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-
 #====================================================================================================
 #                                              Functions 
 #====================================================================================================
-
 def simple_moving_average(group, window=10):
     group['SMA_10Days'] = group['Close'].rolling(window=window).mean()
     return group
@@ -36,7 +34,6 @@ def sequence(data, sequence_len):
 #====================================================================================================
 #                                       Retrieve NASDAQ 100 Tickers
 #====================================================================================================
-
 # Retrieve datatable
 nasdaq100_url = "https://en.wikipedia.org/wiki/NASDAQ-100"
 headers = {"User-Agent": "Mozilla/5.0"}
@@ -50,9 +47,6 @@ for table in tables:
 # Retrieve tickers
 tickers = nasdaq_table['Ticker'].tolist()
 tickers = [t.replace('.', '-') for t in tickers]
-
-# print("Number of tickers: ", len(tickers))
-# print(tickers)
 
 #====================================================================================================
 #                                  Download historical data for all tickers
@@ -70,7 +64,6 @@ for t in tickers:
     except KeyError:                            # Dataframe not found.
         print(f"No data for {t}. Skipped!")
         continue
-
     if df.empty:                                # Dataframe is null.
         print(f"No data for {t}. Skipped!")
         continue
@@ -91,14 +84,13 @@ final_df = pd.concat(ticker_historical_dfs, ignore_index=True)
 final_df.to_csv('nasdaq100_historicalData.csv', index=False)
 print("Historical stock data saved to CSV.")
 
-
 #====================================================================================================
 #                                  Dataset Preprocessing 
 #====================================================================================================
-final_df['Date'] = pd.to_datetime(final_df['Date'])             # Change string dates to datetime objects
-final_df = final_df.sort_values(['Ticker', 'Date'])             # Sort by ticker and then by date
+final_df['Date'] = pd.to_datetime(final_df['Date'])                             # Change string dates to datetime objects
+final_df = final_df.sort_values(['Ticker', 'Date'])                             # Sort by ticker and then by date
 final_df = final_df.groupby('Ticker', as_index=False).ffill()                   # Forward fill
-print(final_df.columns)
+
 #====================================================================================================
 #                                    Feature Engineering - Create the Features
 #====================================================================================================
@@ -159,15 +151,15 @@ class LSTM(nn.Module):
 
     def forward(self, inputTensorSeq):
         output, _ = self.lstm(inputTensorSeq)           
-        output = output[:,-1,:]               # Select only the last timestamp of each sequence. Keep all features (high, low, etc.)
-        output = self.fc(output)              # Prediction
+        output = output[:,-1,:]                                                             # Select only the last timestamp of each sequence. Keep all features (high, low, etc.)
+        output = self.fc(output)                                                            # Prediction
         return output
     
 # ====== Intializing LSTM Model =====
 input_size = X_train.shape[2]
 model = LSTM(input_size)
-mse = nn.MSELoss()                                              # Used to iteratively improve model
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)      # Used to iteratively improve model
+mse = nn.MSELoss()                                                                          # Used to iteratively improve model
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)                                  # Used to iteratively improve model
 
 epochs = 10
 for epoch in range(epochs):
